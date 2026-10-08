@@ -1,5 +1,5 @@
 // Défilement continu (format agence, doc Tech Invaders) : .marquee > .marquee-layout > .logo-item > .logo-item_inner.
-// Réglages sur .marquee : data-speed (secondes pour un tour, défaut 15), data-direction="right" (droite vers gauche).
+// Réglages sur .marquee : data-speed (secondes pour un tour, défaut 15), data-direction="right" (défilement vers la droite).
 // Le contenu n'est posé qu'une fois dans Webflow : le module le duplique, les copies sont masquées aux lecteurs d'écran.
 
 const DEFAULT_SPEED = 15
