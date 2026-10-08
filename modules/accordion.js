@@ -4,6 +4,7 @@
 //   [data-accordion-trigger]    la zone cliquable (question)
 //   [data-accordion-content]    le contenu qui s'ouvre (réponse)
 //   [data-accordion-icon]       facultatif, l'icône
+//   [data-accordion-open]       facultatif, sur l'élément : ouvert au chargement
 // La classe is-open est posée sur l'élément et l'icône ouverts : l'animation de l'icône se règle dans Webflow.
 import { prefersReducedMotion } from './utils.js'
 
@@ -36,8 +37,11 @@ export function init() {
     item.trigger.setAttribute('role', 'button')
     item.trigger.setAttribute('tabindex', '0')
     item.trigger.setAttribute('aria-controls', item.content.id)
-    item.trigger.setAttribute('aria-expanded', 'false')
-    gsap.set(item.content, { height: 0, overflow: 'hidden' })
+    const startOpen = item.el.hasAttribute('data-accordion-open')
+    item.el.classList.toggle('is-open', startOpen)
+    item.icon?.classList.toggle('is-open', startOpen)
+    item.trigger.setAttribute('aria-expanded', String(startOpen))
+    gsap.set(item.content, { height: startOpen ? 'auto' : 0, overflow: 'hidden' })
 
     const toggle = () => {
       const open = !item.el.classList.contains('is-open')
