@@ -4,6 +4,7 @@ import { init as initAccordion } from './modules/accordion.js'
 import { init as initFormValidation } from './modules/formValidation.js'
 import { init as initNavScroll } from './modules/navScroll.js'
 import { init as initFormSteps } from './modules/formSteps.js'
+import { init as initMarquee } from './modules/marquee.js'
 
 // Modules présents sur toutes les pages (navbar, transitions de page) : les appeler ici, avant le détecteur.
 
@@ -13,6 +14,7 @@ const moduleDetectors = {
   formValidation: { selector: 'form[data-validate]', initFn: initFormValidation },
   navScroll: { selector: '[data-nav-scroll]', initFn: initNavScroll },
   formSteps: { selector: '[data-form-steps]', initFn: initFormSteps },
+  marquee: { selector: '.marquee', initFn: initMarquee },
 }
 
 Object.entries(moduleDetectors).forEach(([name, { selector, initFn }]) => {
