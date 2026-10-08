@@ -2,6 +2,7 @@
 import { init as initSlideIn } from './modules/slideIn.js'
 import { init as initAccordion } from './modules/accordion.js'
 import { init as initFormValidation } from './modules/formValidation.js'
+import { init as initNavScroll } from './modules/navScroll.js'
 
 // Modules présents sur toutes les pages (navbar, transitions de page) : les appeler ici, avant le détecteur.
 
@@ -9,6 +10,7 @@ const moduleDetectors = {
   slideIn: { selector: '[data-slide-in], [data-slide-in-stagger]', initFn: initSlideIn },
   accordion: { selector: '[data-accordion]', initFn: initAccordion },
   formValidation: { selector: 'form[data-validate]', initFn: initFormValidation },
+  navScroll: { selector: '[data-nav-scroll]', initFn: initNavScroll },
 }
 
 Object.entries(moduleDetectors).forEach(([name, { selector, initFn }]) => {
