@@ -1,0 +1,2 @@
+# Le hook de pré-commit doit garder des fins de ligne Unix, sinon le shell ne le lit pas
+.githooks/* text eol=lf

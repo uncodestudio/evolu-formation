@@ -1,0 +1,6 @@
+#!/bin/sh
+# Recompile dist/main.js à chaque commit : jsDelivr sert dist/, qui ne doit jamais être en retard sur le code (R-45).
+# Activé par : git config core.hooksPath .githooks (une fois, après la copie du starter).
+echo "Build de dist/main.js..."
+npm run build || exit 1
+git add dist/main.js

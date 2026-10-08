@@ -1,0 +1,7 @@
+node_modules/
+.env
+.DS_Store
+*.log
+# Maquettes : jamais commitées, le dépôt est public (seul le mode d'emploi l'est)
+maquette/*
+!maquette/LISEZ-MOI.md
