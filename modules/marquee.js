@@ -10,6 +10,7 @@ export function init() {
   document.querySelectorAll('.marquee').forEach((marquee) => {
     const content = marquee.firstElementChild
     if (!content) return
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return // pas d'animation, donc pas de copies
 
     // Duplication pour la boucle infinie
     ;[...content.children].forEach((item) => {
@@ -17,8 +18,6 @@ export function init() {
       clone.setAttribute('aria-hidden', 'true')
       content.appendChild(clone)
     })
-
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const isRight = marquee.dataset.direction === 'right'
     const speed = +marquee.dataset.speed || DEFAULT_SPEED

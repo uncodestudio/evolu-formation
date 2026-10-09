@@ -1,31 +1,17 @@
 // Onglets (programme des LP).
 // Accroches : [data-tabs] sur le conteneur, [data-tab="cle"] sur chaque onglet, [data-tab-panel="cle"] sur chaque panneau.
 // Le premier onglet est actif au chargement, ou celui qui porte la classe is-active dans Webflow.
+// Attributs fixes posés dans Webflow : role="tablist" sur le parent des onglets ; role="tab", id et aria-controls sur chaque onglet ;
+// role="tabpanel", id et aria-labelledby sur chaque panneau. Le module ne gère que l'état (aria-selected, tabindex, hidden, is-active).
 // Sans JS, tous les panneaux restent visibles.
 
 const CLASS_ACTIVE = 'is-active'
 
 export function init() {
-  document.querySelectorAll('[data-tabs]').forEach((root, rootIndex) => {
+  document.querySelectorAll('[data-tabs]').forEach((root) => {
     const tabs = [...root.querySelectorAll('[data-tab]')]
     const panels = [...root.querySelectorAll('[data-tab-panel]')]
     if (!tabs.length || !panels.length) return
-
-    const tabList = tabs[0].parentElement
-    tabList.setAttribute('role', 'tablist')
-
-    tabs.forEach((tab) => {
-      const key = tab.dataset.tab
-      const panel = panels.find((p) => p.dataset.tabPanel === key)
-      tab.id = tab.id || `tab-${rootIndex + 1}-${key}`
-      tab.setAttribute('role', 'tab')
-      if (panel) {
-        panel.id = panel.id || `tabpanel-${rootIndex + 1}-${key}`
-        panel.setAttribute('role', 'tabpanel')
-        panel.setAttribute('aria-labelledby', tab.id)
-        tab.setAttribute('aria-controls', panel.id)
-      }
-    })
 
     const show = (index, moveFocus) => {
       tabs.forEach((tab, i) => {
