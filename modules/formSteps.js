@@ -4,6 +4,8 @@
 // Sans JS, toutes les étapes restent visibles et le formulaire reste envoyable (Webflow natif).
 // Ailleurs sur la page, un lien [data-form-preset="id-du-radio"] coche ce choix dans le formulaire quand on clique dessus
 // (bloc devis du bas de page vers le formulaire du hero).
+// Un champ caché [data-form-page] reçoit le titre et l'adresse de la page : le formulaire s'appelle « Form LP »
+// sur toutes les LP, c'est ce champ qui dit dans l'e-mail reçu de quelle page vient la demande.
 
 const RECAP_FIELDS = ['Formation', 'Nom', 'Entreprise'] // champs repris dans le récapitulatif, dans cet ordre
 const RECAP_SEPARATOR = ' · '
@@ -24,6 +26,10 @@ export function init() {
     if (steps.length < 2) return
     const scope = form.closest('.w-form') || form
     let current = 0
+
+    form.querySelectorAll('[data-form-page]').forEach((field) => {
+      field.value = `${document.title} (${location.pathname})`
+    })
 
     const preset = form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]`)
     if (preset && !form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]:checked`)) preset.checked = true
