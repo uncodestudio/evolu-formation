@@ -6,6 +6,7 @@ import { init as initNavScroll } from './modules/navScroll.js'
 import { init as initFormSteps } from './modules/formSteps.js'
 import { init as initMarquee } from './modules/marquee.js'
 import { init as initTabs } from './modules/tabs.js'
+import { init as initCycle } from './modules/cycle.js'
 
 // Modules présents sur toutes les pages (navbar, transitions de page) : les appeler ici, avant le détecteur.
 
@@ -17,6 +18,7 @@ const moduleDetectors = {
   formSteps: { selector: '[data-form-steps]', initFn: initFormSteps },
   marquee: { selector: '.marquee', initFn: initMarquee },
   tabs: { selector: '[data-tabs]', initFn: initTabs },
+  cycle: { selector: '[data-cycle]', initFn: initCycle },
 }
 
 Object.entries(moduleDetectors).forEach(([name, { selector, initFn }]) => {
