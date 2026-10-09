@@ -31,7 +31,15 @@ export function init() {
     item.el.classList.toggle('is-open', open)
     item.icon?.classList.toggle('is-open', open)
     item.trigger.setAttribute('aria-expanded', String(open))
-    gsap.to(item.content, { height: open ? 'auto' : 0, duration, ease: 'power2.inOut' })
+    // Réponse fermée : masquée aux lecteurs d'écran et au clavier une fois l'animation finie
+    if (open) gsap.set(item.content, { visibility: 'visible' })
+    gsap.to(item.content, {
+      height: open ? 'auto' : 0,
+      duration,
+      ease: 'power2.inOut',
+      overwrite: true, // une réouverture pendant la fermeture annule la fermeture (et son masquage)
+      onComplete: open ? undefined : () => gsap.set(item.content, { visibility: 'hidden' }),
+    })
   }
 
   items.forEach((item, index) => {
@@ -43,7 +51,7 @@ export function init() {
     item.el.classList.toggle('is-open', startOpen)
     item.icon?.classList.toggle('is-open', startOpen)
     item.trigger.setAttribute('aria-expanded', String(startOpen))
-    gsap.set(item.content, { height: startOpen ? 'auto' : 0, overflow: 'hidden' })
+    gsap.set(item.content, { height: startOpen ? 'auto' : 0, overflow: 'hidden', visibility: startOpen ? 'visible' : 'hidden' })
 
     const toggle = () => {
       const open = !item.el.classList.contains('is-open')

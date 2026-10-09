@@ -2,6 +2,8 @@
 // Accroches : [data-form-steps] sur le <form>, [data-form-step] sur chaque étape (dans l'ordre),
 // [data-form-next] et [data-form-prev] pour naviguer, [data-form-recap] rempli avec le récapitulatif.
 // Sans JS, toutes les étapes restent visibles et le formulaire reste envoyable (Webflow natif).
+// Ailleurs sur la page, un lien [data-form-preset="id-du-radio"] coche ce choix dans le formulaire quand on clique dessus
+// (bloc devis du bas de page vers le formulaire du hero).
 
 const RECAP_FIELDS = ['Formation', 'Nom', 'Entreprise'] // champs repris dans le récapitulatif, dans cet ordre
 const RECAP_SEPARATOR = ' · '
@@ -65,6 +67,12 @@ export function init() {
     // Entrée dans une étape intermédiaire : on passe à l'étape suivante. Il faut le faire au clavier,
     // car le navigateur valide tout le formulaire avant l'envoi et bloquerait sur les champs masqués.
     form.addEventListener('keydown', (e) => {
+      // Espace sur les liens-boutons Continuer et Modifier : même effet qu'un clic, comme un vrai bouton
+      if (e.key === ' ' && e.target.closest('[data-form-next], [data-form-prev]')) {
+        e.preventDefault()
+        e.target.click()
+        return
+      }
       if (e.key !== 'Enter' || current === steps.length - 1) return
       if (e.target.matches('textarea, button, a')) return
       e.preventDefault()
@@ -87,5 +95,12 @@ export function init() {
     )
 
     show(0, false)
+  })
+
+  document.querySelectorAll('[data-form-preset]').forEach((link) => {
+    link.addEventListener('click', () => {
+      const radio = document.getElementById(link.dataset.formPreset)
+      if (radio) radio.checked = true
+    })
   })
 }
