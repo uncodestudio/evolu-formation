@@ -3,7 +3,7 @@
 // [data-form-next] et [data-form-prev] pour naviguer, [data-form-recap] rempli avec le récapitulatif.
 // Sans JS, toutes les étapes restent visibles et le formulaire reste envoyable (Webflow natif).
 // Ailleurs sur la page, un lien [data-form-preset="id-du-radio"] coche ce choix dans le formulaire quand on clique dessus
-// (bloc devis du bas de page vers le formulaire du hero).
+// (bloc devis du bas de page vers le formulaire du hero). Avec formClone, le choix est recopié dans les copies.
 // Un champ caché [data-form-page] reçoit le titre et l'adresse de la page : le formulaire s'appelle « Form LP »
 // sur toutes les LP, c'est ce champ qui dit dans l'e-mail reçu de quelle page vient la demande.
 
@@ -106,7 +106,10 @@ export function init() {
   document.querySelectorAll('[data-form-preset]').forEach((link) => {
     link.addEventListener('click', () => {
       const radio = document.getElementById(link.dataset.formPreset)
-      if (radio) radio.checked = true
+      if (!radio) return
+      radio.checked = true
+      // Prévient formClone, qui recopie le choix dans les autres formulaires de la page
+      radio.dispatchEvent(new Event('change', { bubbles: true }))
     })
   })
 }
