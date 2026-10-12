@@ -2,7 +2,7 @@
 // Accroches : [data-calendar] sur la section, [data-calendar-filter="all|init|mac"] sur les boutons de filtre,
 // [data-calendar-session] sur chaque ligne (composant Session, liste CMS à terme) avec data-calendar-type="init|mac",
 // [data-calendar-date] et [data-calendar-formation] dans la ligne, [data-calendar-book] sur son bouton Réserver,
-// [data-calendar-more] sur le bouton Voir plus de dates.
+// [data-calendar-more] sur le bouton Voir plus de dates. Filtres et Voir plus peuvent être des liens role="button".
 // Ligne complète : le composant affiche le bloc [data-calendar-full] (interrupteur Complet), le JS n'a rien à décider.
 // Réserver : coche la formation et la session de la ligne dans le formulaire (formClone recopie partout),
 // passe à l'étape des coordonnées, puis la modale s'ouvre par [data-modal-open] posé sur le même bouton.
@@ -45,7 +45,8 @@ export function init() {
     }
 
     filters.forEach((btn) =>
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
         filter = btn.dataset.calendarFilter
         showAll = false
         render()
@@ -53,11 +54,19 @@ export function init() {
     )
 
     if (more) {
-      more.addEventListener('click', () => {
+      more.addEventListener('click', (e) => {
+        e.preventDefault()
         showAll = !showAll
         render()
       })
     }
+
+    // Filtres et Voir plus sont des liens role="button" dans Webflow : Espace a le même effet qu'un clic
+    calendar.addEventListener('keydown', (e) => {
+      if (e.key !== ' ' || !e.target.closest('[data-calendar-filter], [data-calendar-more]')) return
+      e.preventDefault()
+      e.target.click()
+    })
 
     // Écouteur posé sur chaque bouton (pas sur la section) : modal arrête la propagation du clic.
     // Calendar démarre avant modal (main.js), donc le choix est fait avant l'ouverture de la modale.
