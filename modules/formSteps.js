@@ -39,10 +39,12 @@ export function init() {
       if (text) scope.querySelectorAll('[data-form-recap]').forEach((el) => (el.textContent = text))
     }
 
+    // moveFocus = changement fait par le visiteur : on prévient formClone, qui aligne les autres formulaires
     const show = (index, moveFocus) => {
       steps.forEach((step, i) => (step.hidden = i !== index))
       current = index
       if (!moveFocus) return
+      form.dispatchEvent(new CustomEvent('formsteps:change', { bubbles: true, detail: { index } }))
       const title = steps[index].querySelector('h2, h3, h4')
       if (title) {
         title.setAttribute('tabindex', '-1')
@@ -59,6 +61,12 @@ export function init() {
       updateRecap()
       show(Math.min(current + 1, steps.length - 1), true)
     }
+
+    // Étape imposée par un autre formulaire de la page (formClone), sans déplacer le focus
+    form.addEventListener('formsteps:goto', (e) => {
+      updateRecap()
+      show(Math.max(0, Math.min(e.detail.index, steps.length - 1)), false)
+    })
 
     form.addEventListener('click', (e) => {
       if (e.target.closest('[data-form-next]')) {

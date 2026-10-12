@@ -4,7 +4,8 @@
 // Sans [data-form-source], la source est le premier .w-form qui contient un [data-form-steps].
 // Le module copie la source dans chaque emplacement, rend les ids uniques (suffixe = valeur de l'emplacement),
 // ajoute un champ caché « Emplacement » pour savoir d'où vient la demande, et synchronise les valeurs :
-// ce que le prospect saisit dans un formulaire se retrouve dans les autres. Seul le formulaire envoyé part.
+// ce que le prospect saisit dans un formulaire se retrouve dans les autres, et l'étape en cours (formSteps) aussi.
+// Seul le formulaire envoyé part.
 // Il doit tourner avant que Webflow branche ses formulaires (DOMContentLoaded) : main.js, chargé en module,
 // s'exécute avant cet événement. Sans JS, les emplacements restent vides et le hero garde son formulaire.
 
@@ -79,5 +80,11 @@ export function init() {
     }
     form.addEventListener('input', onChange)
     form.addEventListener('change', onChange)
+    // Étapes (formSteps) : Continuer ou Modifier dans un formulaire fait passer les autres à la même étape
+    form.addEventListener('formsteps:change', (e) => {
+      forms.forEach((other) => {
+        if (other !== form) other.dispatchEvent(new CustomEvent('formsteps:goto', { detail: { index: e.detail.index } }))
+      })
+    })
   })
 }
