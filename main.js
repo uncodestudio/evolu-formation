@@ -9,6 +9,7 @@ import { init as initTabs } from './modules/tabs.js'
 import { init as initCycle } from './modules/cycle.js'
 import { init as initFormClone } from './modules/formClone.js'
 import { init as initModal } from './modules/modal.js'
+import { init as initCalendar } from './modules/calendar.js'
 
 // Modules présents sur toutes les pages (navbar, transitions de page) : les appeler ici, avant le détecteur.
 
@@ -23,6 +24,8 @@ const moduleDetectors = {
   marquee: { selector: '.marquee', initFn: initMarquee },
   tabs: { selector: '[data-tabs]', initFn: initTabs },
   cycle: { selector: '[data-cycle]', initFn: initCycle },
+  // Avant modal : le bouton Réserver coche la session avant que la modale s'ouvre
+  calendar: { selector: '[data-calendar]', initFn: initCalendar },
   modal: { selector: '[data-modal]', initFn: initModal },
 }
 

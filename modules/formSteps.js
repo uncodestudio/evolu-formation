@@ -6,6 +6,7 @@
 // (bloc devis du bas de page vers le formulaire du hero). Avec formClone, le choix est recopié dans les copies.
 // Un champ caché [data-form-page] reçoit le titre et l'adresse de la page : le formulaire s'appelle « Form LP »
 // sur toutes les LP, c'est ce champ qui dit dans l'e-mail reçu de quelle page vient la demande.
+// LP inter : un groupe de sessions [data-form-session] (voir plus bas) et data-form-recap-fields sur le <form>.
 
 const RECAP_FIELDS = ['Formation', 'Nom', 'Entreprise'] // champs repris dans le récapitulatif, dans cet ordre
 const RECAP_SEPARATOR = ' · '
@@ -31,11 +32,25 @@ export function init() {
       field.value = `${document.title} (${location.pathname})`
     })
 
+    // Sessions (LP inter, [data-form-session]) : la liste CMS répète la même carte, et Webflow ne permet pas
+    // de lier la valeur d'un bouton radio au CMS. Chaque session prend donc pour valeur le texte de sa date,
+    // et les ids répétés deviennent uniques.
+    form.querySelectorAll('[data-form-session] input[type="radio"]').forEach((radio, i) => {
+      const label = radio.closest('label')?.querySelector('.w-form-label')
+      if (label && label.textContent.trim()) radio.value = label.textContent.trim()
+      if (radio.id && document.querySelectorAll(`#${CSS.escape(radio.id)}`).length > 1) radio.id = `${radio.id}-${i + 1}`
+    })
+
     const preset = form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]`)
     if (preset && !form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]:checked`)) preset.checked = true
 
+    // Champs du récapitulatif : data-form-recap-fields="Formation,Session,Nom" sur le <form>, sinon la liste par défaut
+    const recapFields = form.dataset.formRecapFields
+      ? form.dataset.formRecapFields.split(',').map((name) => name.trim()).filter(Boolean)
+      : RECAP_FIELDS
+
     const updateRecap = () => {
-      const text = RECAP_FIELDS.map((name) => fieldValue(form, name)).filter(Boolean).join(RECAP_SEPARATOR)
+      const text = recapFields.map((name) => fieldValue(form, name)).filter(Boolean).join(RECAP_SEPARATOR)
       if (text) scope.querySelectorAll('[data-form-recap]').forEach((el) => (el.textContent = text))
     }
 
