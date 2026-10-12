@@ -73,6 +73,8 @@ export function init() {
       trigger.setAttribute('aria-haspopup', 'dialog')
       trigger.addEventListener('click', (e) => {
         e.preventDefault()
+        // Empêche le défilement de Webflow vers l'ancre (#reserver) et son ajout dans l'adresse
+        e.stopPropagation()
         open(trigger)
       })
     })
