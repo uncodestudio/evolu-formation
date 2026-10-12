@@ -6,7 +6,8 @@
 //   [data-accordion-icon]       facultatif, l'icône
 //   [data-accordion-open]       facultatif, sur l'élément : ouvert au chargement
 // Attributs fixes posés dans Webflow : role="button", tabindex="0" et aria-controls sur la question, un id sur la réponse.
-// Le module ne gère que l'état (aria-expanded, is-open, hauteur). Repli : une réponse sans id (élément dupliqué) en reçoit un.
+// Le module ne gère que l'état (aria-expanded, is-open, hauteur). Repli : une réponse sans id, ou dont l'id existe déjà
+// (élément répété en composant, élément dupliqué), reçoit un id unique.
 // La classe is-open est posée sur l'élément et l'icône ouverts : l'animation de l'icône se règle dans Webflow.
 import { prefersReducedMotion } from './utils.js'
 
@@ -42,11 +43,15 @@ export function init() {
     })
   }
 
+  const seenIds = new Set()
   items.forEach((item, index) => {
-    if (!item.content.id) {
-      item.content.id = `accordion-content-${index + 1}`
+    // Id manquant, ou en double (élément répété en composant, élément dupliqué) : on en pose un unique
+    if (!item.content.id || seenIds.has(item.content.id)) {
+      const base = item.content.id || 'accordion-content'
+      item.content.id = `${base}-${index + 1}`
       item.trigger.setAttribute('aria-controls', item.content.id)
     }
+    seenIds.add(item.content.id)
     const startOpen = item.el.hasAttribute('data-accordion-open')
     item.el.classList.toggle('is-open', startOpen)
     item.icon?.classList.toggle('is-open', startOpen)
