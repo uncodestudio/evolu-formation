@@ -2,11 +2,12 @@
 // Accroches : [data-modal="devis"] sur la modale (cachée par défaut dans le Designer, classe is-open à l'ouverture),
 // [data-modal-open="devis"] sur tout bouton ou lien qui l'ouvre, [data-modal-close] sur le fond et la croix.
 // ARIA fixe posé dans le Designer (R-73) : role="dialog", aria-modal="true", aria-labelledby sur la boîte.
-// Le JS gère l'état : classe is-open, focus piégé dans la boîte, Échap pour fermer, défilement de la page bloqué,
+// Le JS gère l'état : classe is-open (is-closing pendant l'animation de fermeture), focus piégé dans la boîte, Échap pour fermer, défilement de la page bloqué,
 // retour du focus sur le bouton d'origine. Sans JS, un lien d'ouverture garde son href (ancre vers le formulaire du hero).
 // Un bouton d'ouverture peut aussi porter [data-form-preset] : formSteps coche le choix, formClone le recopie dans la modale.
 
 const OPEN_CLASS = 'is-open'
+const CLOSING_CLASS = 'is-closing'
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])'
 
 const visible = (el) => el.offsetParent !== null || el === document.activeElement
@@ -53,12 +54,19 @@ export function init() {
       }
     }
 
+    // Fermeture animée : classe is-closing le temps de l'animation CSS (global-styles), puis la modale est masquée
     const close = () => {
-      if (!modal.classList.contains(OPEN_CLASS)) return
-      modal.classList.remove(OPEN_CLASS)
-      document.documentElement.style.overflow = ''
+      if (!modal.classList.contains(OPEN_CLASS) || modal.classList.contains(CLOSING_CLASS)) return
       document.removeEventListener('keydown', onKeydown)
-      if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true })
+      modal.classList.add(CLOSING_CLASS)
+      const finish = () => {
+        modal.classList.remove(OPEN_CLASS, CLOSING_CLASS)
+        document.documentElement.style.overflow = ''
+        if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true })
+      }
+      const duration = parseFloat(getComputedStyle(dialog).animationDuration) || 0
+      if (duration > 0) setTimeout(finish, duration * 1000)
+      else finish()
     }
 
     document.querySelectorAll(`[data-modal-open="${name}"]`).forEach((trigger) => {
