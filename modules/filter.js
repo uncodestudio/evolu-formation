@@ -34,7 +34,7 @@ export function init() {
     if (root.hasAttribute('data-calendar')) return // le calendrier gère aussi Voir plus de dates
     const tabs = [...root.querySelectorAll('[data-filter-tab]')]
     const items = [...root.querySelectorAll('[data-filter-item]')]
-    if (!tabs.length) return
+    if (!tabs.length && !items.length) return // sans onglets (une seule sous-formation), la limite et Voir plus restent actifs
     const inputs = [...root.querySelectorAll('[data-filter-input]')]
     // Limite d'affichage : data-filter-limit="5" sur le groupe, bouton [data-filter-more] pour voir le reste
     const limit = parseInt(root.dataset.filterLimit, 10) || 0
