@@ -7,7 +7,8 @@
 // Un élément sans texte caché (Aucune date ne me convient) reste toujours visible ; une session masquée est décochée.
 // Option : un champ [data-filter-input] dans le groupe reçoit le texte de l'onglet choisi (envoyé avec le formulaire).
 // Option : data-filter-limit="5" sur le groupe n'affiche que les 5 premiers éléments, [data-filter-more] montre le reste
-// (le nombre caché s'ajoute au texte du bouton). Une session cochée au-delà de la limite déplie la liste.
+// (le nombre caché s'ajoute au texte du bouton ; data-less-label sur le bouton donne le texte une fois déplié).
+// Une session cochée au-delà de la limite déplie la liste.
 // Les groupes hors calendrier (formulaire du hero et ses copies formClone) restent synchronisés entre eux.
 // Un autre module choisit un onglet par l'événement filter:select (detail.value = texte de l'onglet).
 // États en classes natives : is-active sur l'onglet choisi, hide (Client-First) sur l'élément masqué.
@@ -27,7 +28,8 @@ export const matches = (item, wanted) => {
   return !wanted || value === null || value === wanted
 }
 
-const groups = [] // groupes synchronisés (formulaire et copies)
+const groups = [] // groupes synchronisés (formulaire et copies) : fonctions select(value)
+const renders = [] // affichage de chaque groupe, relu quand une session est cochée ailleurs
 
 export function init() {
   document.querySelectorAll('[data-filter]').forEach((root) => {
@@ -40,6 +42,7 @@ export function init() {
     const limit = parseInt(root.dataset.filterLimit, 10) || 0
     const more = root.querySelector('[data-filter-more]')
     const moreLabel = more ? more.textContent.trim() : ''
+    const lessLabel = more?.dataset.lessLabel || 'Voir moins de dates'
     const moreBox = more && more.parentElement.children.length === 1 ? more.parentElement : more
     let active = null
     let showAll = false
@@ -67,7 +70,7 @@ export function init() {
       if (!more) return
       const hiddenCount = matching.length - limit
       moreBox.classList.toggle('hide', hiddenCount <= 0)
-      more.textContent = showAll ? 'Voir moins de dates' : `${moreLabel} (${hiddenCount})`
+      more.textContent = showAll ? lessLabel : `${moreLabel} (${hiddenCount})`
       more.setAttribute('aria-expanded', String(showAll))
     }
 
@@ -91,9 +94,6 @@ export function init() {
       })
     }
 
-    // Une session cochée ailleurs (formClone, Réserver) : on relit l'affichage
-    document.addEventListener('change', () => setTimeout(render))
-
     tabs.forEach((tab) => {
       tab.addEventListener('click', (e) => {
         e.preventDefault()
@@ -109,8 +109,15 @@ export function init() {
     })
 
     groups.push(select)
+    renders.push(render)
     render()
   })
 
   document.addEventListener('filter:select', (e) => groups.forEach((group) => group(e.detail?.value || null)))
+  // Une session cochée ailleurs (formClone recopie sans événement, Réserver) : un seul écouteur pour tous les groupes,
+  // limité aux boutons radio (la saisie dans les autres champs ne relance rien)
+  document.addEventListener('change', (e) => {
+    if (!e.target.matches?.('input[type="radio"]')) return
+    setTimeout(() => renders.forEach((render) => render()))
+  })
 }

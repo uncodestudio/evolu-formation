@@ -27,7 +27,7 @@ const moduleDetectors = {
   marquee: { selector: '.marquee', initFn: initMarquee },
   tabs: { selector: '[data-tabs]', initFn: initTabs },
   cycle: { selector: '[data-cycle]', initFn: initCycle },
-  // Avant modal : le bouton Réserver coche la session avant que la modale s'ouvre
+  // Calendrier : Réserver coche la session et fait défiler la modale à son ouverture (événement modal:open)
   calendar: { selector: '[data-calendar]', initFn: initCalendar },
   modal: { selector: '[data-modal]', initFn: initModal },
 }

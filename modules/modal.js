@@ -46,6 +46,8 @@ export function init() {
       document.documentElement.style.overflow = 'hidden'
       document.addEventListener('keydown', onKeydown)
       // Focus sur le premier champ du formulaire, sinon sur la boîte elle-même
+      // Prévient les autres modules (calendar fait défiler jusqu'à la session réservée)
+      modal.dispatchEvent(new CustomEvent('modal:open', { bubbles: true, detail: { name, trigger } }))
       const field = dialog.querySelector('input:not([type="hidden"]), select, textarea') || focusables()[0]
       if (field) field.focus({ preventScroll: true })
       else {

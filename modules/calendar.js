@@ -11,7 +11,8 @@
 // Ligne complète : visibilité conditionnelle CMS (Complet) dans Webflow, le JS n'a rien à décider.
 // Réserver : choisit l'onglet de la formation (filter:select) et coche la session de la ligne dans le formulaire
 // (clé [data-session-key] commune si présente, sinon texte de la date), revient à l'étape 1, puis la modale s'ouvre
-// par [data-modal-open] posé sur le même bouton et défile jusqu'à la session cochée.
+// par [data-modal-open] posé sur le même bouton et défile jusqu'à la session cochée (événement modal:open émis par modal,
+// quel que soit l'ordre de démarrage des deux modules). data-less-label sur Voir plus donne le texte une fois déplié.
 
 import { norm, tabText, itemValue, matches } from './filter.js'
 
@@ -48,19 +49,28 @@ const checkSession = (row) => {
   return checkRadio('Session', row.querySelector('[data-calendar-date]')?.textContent)
 }
 
-// Dans la modale ouverte, fait défiler la boîte jusqu'à la session cochée
+// Dans la modale ouverte, fait défiler la boîte jusqu'à la session cochée.
+// Différé d'un tour : le module filter relit la liste (et la déplie) juste après le changement de session.
+let pendingReveal = false
 const revealInModal = () => {
+  pendingReveal = false
   const modal = document.querySelector('[data-modal].is-open')
   const radio = modal?.querySelector('[data-filter-item] input[type="radio"]:checked')
   radio?.closest('[data-filter-item]')?.scrollIntoView({ block: 'center' })
 }
+const scheduleReveal = () => setTimeout(() => setTimeout(revealInModal))
 
 export function init() {
+  document.addEventListener('modal:open', () => {
+    if (pendingReveal) scheduleReveal()
+  })
+
   document.querySelectorAll('[data-calendar]').forEach((calendar) => {
     const rows = [...calendar.querySelectorAll('[data-filter-item]')]
     const tabs = [...calendar.querySelectorAll('[data-filter-tab]')]
     const more = calendar.querySelector('[data-calendar-more]')
     const moreLabel = more ? more.textContent.trim() : ''
+    const lessLabel = more?.dataset.lessLabel || 'Voir moins de dates'
     // On masque le bloc qui entoure le bouton s'il ne contient que lui (pas de marge vide sous la liste)
     const moreBox = more && more.parentElement.children.length === 1 ? more.parentElement : more
     let active = tabs.find((tab) => tab.dataset.filterTab === 'all') || null
@@ -84,7 +94,7 @@ export function init() {
       if (!more) return
       const hiddenCount = matching.length - VISIBLE
       moreBox.classList.toggle('hide', hiddenCount <= 0)
-      more.textContent = showAll ? 'Voir moins de dates' : `${moreLabel} (${hiddenCount})`
+      more.textContent = showAll ? lessLabel : `${moreLabel} (${hiddenCount})`
       more.setAttribute('aria-expanded', String(showAll))
     }
 
@@ -125,7 +135,9 @@ export function init() {
         document.querySelectorAll('[data-form-steps]').forEach((form) =>
           form.dispatchEvent(new CustomEvent('formsteps:goto', { detail: { index: 0 } }))
         )
-        setTimeout(revealInModal, 120)
+        // La modale s'ouvre juste après (ou s'est déjà ouverte si modal a démarré avant) : défilement à son ouverture
+        pendingReveal = true
+        if (document.querySelector('[data-modal].is-open')) scheduleReveal()
       })
     )
 
