@@ -5,9 +5,10 @@
 //   [data-accordion-content]    le contenu qui s'ouvre (réponse)
 //   [data-accordion-icon]       facultatif, l'icône
 //   [data-accordion-open]       facultatif, sur l'élément : ouvert au chargement
-// Attributs fixes posés dans Webflow : role="button", tabindex="0" et aria-controls sur la question, un id sur la réponse.
-// Le module ne gère que l'état (aria-expanded, is-open, hauteur). Repli : une réponse sans id, ou dont l'id existe déjà
-// (élément répété en composant, élément dupliqué), reçoit un id unique.
+// Attributs fixes posés dans Webflow : role="button" et tabindex="0" sur la question.
+// Pas d'id ni d'aria-controls dans les composants répétés (FAQ, programme) : ils seraient dupliqués à chaque instance.
+// Le module pose sur chaque réponse un id unique et l'aria-controls de sa question, et gère l'état
+// (aria-expanded, is-open, hauteur). Une réponse qui a déjà un id unique le garde.
 // La classe is-open est posée sur l'élément et l'icône ouverts : l'animation de l'icône se règle dans Webflow.
 import { prefersReducedMotion } from './utils.js'
 
