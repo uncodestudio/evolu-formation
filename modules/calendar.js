@@ -1,7 +1,7 @@
 // Calendrier des sessions (LP inter).
 // Accroches : [data-calendar] sur la section, [data-calendar-filter="all|init|mac"] sur les boutons de filtre,
-// [data-calendar-session] sur chaque ligne (composant Session, liste CMS à terme) avec data-calendar-type="init|mac",
-// [data-calendar-date] et [data-calendar-formation] dans la ligne, [data-calendar-book] sur son bouton Réserver,
+// [data-calendar-session] sur chaque ligne (composant Session, liste CMS à terme), [data-calendar-date] et
+// [data-calendar-formation] dans la ligne (le texte de la formation doit être celui d'un filtre), [data-calendar-book] sur son bouton Réserver,
 // [data-calendar-more] sur le bouton Voir plus de dates. Filtres et Voir plus peuvent être des liens role="button".
 // Ligne complète : le composant affiche le bloc [data-calendar-full] (interrupteur Complet), le JS n'a rien à décider.
 // Réserver : coche la formation et la session de la ligne dans le formulaire (formClone recopie partout),
@@ -31,6 +31,14 @@ export function init() {
     const moreLabel = more ? more.textContent.trim() : ''
     let filter = 'all'
     let showAll = false
+
+    // Filtre par texte : une ligne appartient au filtre dont le texte est celui de sa formation ([data-calendar-formation]).
+    // La clé du filtre (init, mac) est recopiée sur la ligne en data-calendar-type, ce qui donne aussi la couleur de la barre.
+    rows.forEach((row) => {
+      const name = norm(row.querySelector('[data-calendar-formation]')?.textContent)
+      const match = filters.find((btn) => btn.dataset.calendarFilter !== 'all' && norm(btn.textContent) === name)
+      row.dataset.calendarType = match ? match.dataset.calendarFilter : ''
+    })
 
     const render = () => {
       const matching = rows.filter((row) => filter === 'all' || row.dataset.calendarType === filter)

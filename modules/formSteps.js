@@ -6,11 +6,17 @@
 // (bloc devis du bas de page vers le formulaire du hero). Avec formClone, le choix est recopié dans les copies.
 // Un champ caché [data-form-page] reçoit le titre et l'adresse de la page : le formulaire s'appelle « Form LP »
 // sur toutes les LP, c'est ce champ qui dit dans l'e-mail reçu de quelle page vient la demande.
-// LP inter : un groupe de sessions [data-form-session] (voir plus bas) et data-form-recap-fields sur le <form>.
+// LP inter : un groupe de sessions [data-form-session] filtré par le choix de formation (voir plus bas)
+// et data-form-recap-fields sur le <form>.
 
 const RECAP_FIELDS = ['Formation', 'Nom', 'Entreprise'] // champs repris dans le récapitulatif, dans cet ordre
 const RECAP_SEPARATOR = ' · '
 const DEFAULT_CHOICE = 'Formation' // groupe radio pré-coché sur sa première option (comme la maquette)
+
+const norm = (text) => (text || '').replace(/\s+/g, ' ').trim().toLowerCase()
+
+// Texte affiché d'un choix radio (libellé Webflow), sinon sa valeur
+const choiceText = (radio) => radio.closest('label')?.querySelector('.w-form-label')?.textContent || radio.value
 
 const firstInvalid = (step) =>
   [...step.querySelectorAll('input, select, textarea')].find((field) => !field.checkValidity())
@@ -43,6 +49,28 @@ export function init() {
 
     const preset = form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]`)
     if (preset && !form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]:checked`)) preset.checked = true
+
+    // Formation = filtre des sessions : chaque carte [data-session-option] contient un champ caché
+    // [data-session-formation] (nom de la formation, relié au CMS). On n'affiche que les cartes dont ce texte
+    // est celui du choix de formation coché. Les options sans champ caché (Aucune date ne me convient) restent visibles.
+    // Une session cachée qui était cochée est décochée.
+    const sessionOptions = [...form.querySelectorAll('[data-session-option]')].filter((option) =>
+      option.querySelector('[data-session-formation]')
+    )
+    const filterSessions = () => {
+      if (!sessionOptions.length) return
+      const choice = form.querySelector(`input[type="radio"][name="${DEFAULT_CHOICE}"]:checked`)
+      const wanted = choice ? norm(choiceText(choice)) : ''
+      sessionOptions.forEach((option) => {
+        const hide = Boolean(wanted) && norm(option.querySelector('[data-session-formation]').textContent) !== wanted
+        option.hidden = hide
+        const radio = option.querySelector('input[type="radio"]')
+        if (hide && radio && radio.checked) radio.checked = false
+      })
+    }
+    filterSessions()
+    // formClone coche les copies sans événement : on refiltre après chaque changement sur la page
+    document.addEventListener('change', () => setTimeout(filterSessions))
 
     // Champs du récapitulatif : data-form-recap-fields="Formation,Session,Nom" sur le <form>, sinon la liste par défaut
     const recapFields = form.dataset.formRecapFields
