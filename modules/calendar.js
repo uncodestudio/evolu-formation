@@ -9,8 +9,9 @@
 // États en classes natives Webflow : hide (Client-First) sur les lignes et Voir plus masqués, is-active sur l'onglet choisi,
 // is-<clé> sur la barre de la ligne quand l'onglet correspondant porte data-calendar-filter="<clé>" (ex. is-mac).
 // Ligne complète : visibilité conditionnelle CMS (Complet) dans Webflow, le JS n'a rien à décider.
-// Réserver : choisit l'onglet de la formation (filter:select) et coche la session de la ligne dans le formulaire,
-// passe à l'étape des coordonnées, puis la modale s'ouvre par [data-modal-open] posé sur le même bouton.
+// Réserver : choisit l'onglet de la formation (filter:select) et coche la session de la ligne dans le formulaire
+// (clé [data-session-key] commune si présente, sinon texte de la date), revient à l'étape 1, puis la modale s'ouvre
+// par [data-modal-open] posé sur le même bouton et défile jusqu'à la session cochée.
 
 import { norm, tabText, itemValue, matches } from './filter.js'
 
@@ -27,6 +28,31 @@ const checkRadio = (name, text) => {
   radio.checked = true
   radio.dispatchEvent(new Event('change', { bubbles: true }))
   return true
+}
+
+// Coche la session de la ligne dans le formulaire. Clé commune [data-session-key] (texte caché relié au slug CMS)
+// dans la ligne et dans la carte du formulaire si elle existe, sinon texte de la date ([data-calendar-date]).
+const checkSession = (row) => {
+  const key = norm(row.querySelector('[data-session-key]')?.textContent)
+  if (key) {
+    const card = [...document.querySelectorAll('[data-filter-item]')].find(
+      (item) => norm(item.querySelector('[data-session-key]')?.textContent) === key
+    )
+    const radio = card?.querySelector('input[type="radio"]')
+    if (radio) {
+      radio.checked = true
+      radio.dispatchEvent(new Event('change', { bubbles: true }))
+      return true
+    }
+  }
+  return checkRadio('Session', row.querySelector('[data-calendar-date]')?.textContent)
+}
+
+// Dans la modale ouverte, fait défiler la boîte jusqu'à la session cochée
+const revealInModal = () => {
+  const modal = document.querySelector('[data-modal].is-open')
+  const radio = modal?.querySelector('[data-filter-item] input[type="radio"]:checked')
+  radio?.closest('[data-filter-item]')?.scrollIntoView({ block: 'center' })
 }
 
 export function init() {
@@ -94,13 +120,12 @@ export function init() {
         if (!row) return
         // Choisit l'onglet de la formation dans le formulaire (module filter), puis coche la session
         document.dispatchEvent(new CustomEvent('filter:select', { detail: { value: row.querySelector('[data-filter-value]')?.textContent } }))
-        const sessionChecked = checkRadio('Session', row.querySelector('[data-calendar-date]')?.textContent)
-        // Formation et session choisies : on va directement aux coordonnées (étape 2)
-        if (sessionChecked) {
-          document.querySelectorAll('[data-form-steps]').forEach((form) =>
-            form.dispatchEvent(new CustomEvent('formsteps:goto', { detail: { index: 1 } }))
-          )
-        }
+        checkSession(row)
+        // Étape 1 de tous les formulaires, puis la modale (ouverte juste après par modal) défile jusqu'à la session cochée
+        document.querySelectorAll('[data-form-steps]').forEach((form) =>
+          form.dispatchEvent(new CustomEvent('formsteps:goto', { detail: { index: 0 } }))
+        )
+        setTimeout(revealInModal, 120)
       })
     )
 

@@ -6,6 +6,8 @@
 // Aucun onglet choisi, ou onglet data-filter-tab="all" : tout s'affiche. Un second clic sur l'onglet choisi le libère.
 // Un élément sans texte caché (Aucune date ne me convient) reste toujours visible ; une session masquée est décochée.
 // Option : un champ [data-filter-input] dans le groupe reçoit le texte de l'onglet choisi (envoyé avec le formulaire).
+// Option : data-filter-limit="5" sur le groupe n'affiche que les 5 premiers éléments, [data-filter-more] montre le reste
+// (le nombre caché s'ajoute au texte du bouton). Une session cochée au-delà de la limite déplie la liste.
 // Les groupes hors calendrier (formulaire du hero et ses copies formClone) restent synchronisés entre eux.
 // Un autre module choisit un onglet par l'événement filter:select (detail.value = texte de l'onglet).
 // États en classes natives : is-active sur l'onglet choisi, hide (Client-First) sur l'élément masqué.
@@ -34,7 +36,13 @@ export function init() {
     const items = [...root.querySelectorAll('[data-filter-item]')]
     if (!tabs.length) return
     const inputs = [...root.querySelectorAll('[data-filter-input]')]
+    // Limite d'affichage : data-filter-limit="5" sur le groupe, bouton [data-filter-more] pour voir le reste
+    const limit = parseInt(root.dataset.filterLimit, 10) || 0
+    const more = root.querySelector('[data-filter-more]')
+    const moreLabel = more ? more.textContent.trim() : ''
+    const moreBox = more && more.parentElement.children.length === 1 ? more.parentElement : more
     let active = null
+    let showAll = false
 
     const render = () => {
       const label = active && active.dataset.filterTab !== 'all' ? (active.querySelector('[data-filter-label]') || active).textContent.trim() : ''
@@ -44,19 +52,47 @@ export function init() {
         tab.setAttribute('aria-pressed', String(tab === active))
       })
       inputs.forEach((input) => (input.value = label))
+      const matching = []
       items.forEach((item) => {
         const hide = !matches(item, wanted)
-        item.classList.toggle('hide', hide)
+        if (!hide) matching.push(item)
         const radio = item.querySelector('input[type="radio"]')
         if (hide && radio && radio.checked) radio.checked = false
+        item.classList.toggle('hide', hide)
       })
+      if (!limit) return
+      // Une session cochée au-delà de la limite (bouton Réserver du calendrier) : on montre toute la liste
+      if (matching.slice(limit).some((item) => item.querySelector('input[type="radio"]:checked'))) showAll = true
+      matching.forEach((item, i) => item.classList.toggle('hide', !showAll && i >= limit))
+      if (!more) return
+      const hiddenCount = matching.length - limit
+      moreBox.classList.toggle('hide', hiddenCount <= 0)
+      more.textContent = showAll ? 'Voir moins de dates' : `${moreLabel} (${hiddenCount})`
+      more.setAttribute('aria-expanded', String(showAll))
     }
 
     // Choisit l'onglet dont le texte est value (null ou introuvable : aucun onglet)
     const select = (value) => {
       active = value ? tabs.find((tab) => tabText(tab) === norm(value)) || null : null
+      showAll = false
       render()
     }
+
+    if (more) {
+      more.addEventListener('click', (e) => {
+        e.preventDefault()
+        showAll = !showAll
+        render()
+      })
+      more.addEventListener('keydown', (e) => {
+        if (e.key !== ' ') return
+        e.preventDefault()
+        more.click()
+      })
+    }
+
+    // Une session cochée ailleurs (formClone, Réserver) : on relit l'affichage
+    document.addEventListener('change', () => setTimeout(render))
 
     tabs.forEach((tab) => {
       tab.addEventListener('click', (e) => {
