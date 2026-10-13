@@ -38,10 +38,10 @@ export function init() {
       field.value = `${document.title} (${location.pathname})`
     })
 
-    // Sessions (LP inter, [data-form-session]) : la liste CMS répète la même carte, et Webflow ne permet pas
-    // de lier la valeur d'un bouton radio au CMS. Chaque session prend donc pour valeur le texte de sa date,
-    // et les ids répétés deviennent uniques.
-    form.querySelectorAll('[data-form-session] input[type="radio"]').forEach((radio, i) => {
+    // Sessions (LP inter, [data-form-session] ou cartes [data-session-option] de la liste CMS) : la liste répète
+    // la même carte, et Webflow ne permet pas de lier la valeur d'un bouton radio au CMS. Chaque session prend
+    // donc pour valeur le texte de sa date, et les ids répétés deviennent uniques.
+    form.querySelectorAll('[data-form-session] input[type="radio"], [data-session-option] input[type="radio"]').forEach((radio, i) => {
       const label = radio.closest('label')?.querySelector('.w-form-label')
       if (label && label.textContent.trim()) radio.value = label.textContent.trim()
       if (radio.id && document.querySelectorAll(`#${CSS.escape(radio.id)}`).length > 1) radio.id = `${radio.id}-${i + 1}`
@@ -63,7 +63,7 @@ export function init() {
       const wanted = choice ? norm(choiceText(choice)) : ''
       sessionOptions.forEach((option) => {
         const hide = Boolean(wanted) && norm(option.querySelector('[data-session-formation]').textContent) !== wanted
-        option.hidden = hide
+        option.classList.toggle('hide', hide) // classe Client-First, sans CSS ajouté
         const radio = option.querySelector('input[type="radio"]')
         if (hide && radio && radio.checked) radio.checked = false
       })

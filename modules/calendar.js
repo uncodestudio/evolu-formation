@@ -3,7 +3,9 @@
 // [data-calendar-session] sur chaque ligne (composant Session, liste CMS à terme), [data-calendar-date] et
 // [data-calendar-formation] dans la ligne (le texte de la formation doit être celui d'un filtre), [data-calendar-book] sur son bouton Réserver,
 // [data-calendar-more] sur le bouton Voir plus de dates. Filtres et Voir plus peuvent être des liens role="button".
-// Ligne complète : le composant affiche le bloc [data-calendar-full] (interrupteur Complet), le JS n'a rien à décider.
+// États en classes natives Webflow, sans CSS dans Global Styles : hide (Client-First) sur les lignes et Voir plus masqués,
+// is-active sur le filtre choisi, is-init ou is-mac sur la barre [data-calendar-bar] de la ligne.
+// Ligne complète : visibilité conditionnelle CMS (Complet) dans Webflow, le JS n'a rien à décider.
 // Réserver : coche la formation et la session de la ligne dans le formulaire (formClone recopie partout),
 // passe à l'étape des coordonnées, puis la modale s'ouvre par [data-modal-open] posé sur le même bouton.
 
@@ -29,25 +31,32 @@ export function init() {
     const filters = [...calendar.querySelectorAll('[data-calendar-filter]')]
     const more = calendar.querySelector('[data-calendar-more]')
     const moreLabel = more ? more.textContent.trim() : ''
+    // On masque le bloc qui entoure le bouton s'il ne contient que lui (pas de marge vide sous la liste)
+    const moreBox = more && more.parentElement.children.length === 1 ? more.parentElement : more
     let filter = 'all'
     let showAll = false
 
     // Filtre par texte : une ligne appartient au filtre dont le texte est celui de sa formation ([data-calendar-formation]).
-    // La clé du filtre (init, mac) est recopiée sur la ligne en data-calendar-type, ce qui donne aussi la couleur de la barre.
+    // La clé du filtre (init, mac) est recopiée sur la ligne (data-calendar-type) et en classe is-<clé> sur sa barre.
     rows.forEach((row) => {
       const name = norm(row.querySelector('[data-calendar-formation]')?.textContent)
       const match = filters.find((btn) => btn.dataset.calendarFilter !== 'all' && norm(btn.textContent) === name)
       row.dataset.calendarType = match ? match.dataset.calendarFilter : ''
+      if (match) row.querySelector('[data-calendar-bar]')?.classList.add('is-' + match.dataset.calendarFilter)
     })
 
     const render = () => {
       const matching = rows.filter((row) => filter === 'all' || row.dataset.calendarType === filter)
-      rows.forEach((row) => (row.hidden = true))
-      matching.forEach((row, i) => (row.hidden = !showAll && i >= VISIBLE))
-      filters.forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.calendarFilter === filter)))
+      rows.forEach((row) => row.classList.add('hide'))
+      matching.forEach((row, i) => row.classList.toggle('hide', !showAll && i >= VISIBLE))
+      filters.forEach((btn) => {
+        const on = btn.dataset.calendarFilter === filter
+        btn.classList.toggle('is-active', on)
+        btn.setAttribute('aria-pressed', String(on))
+      })
       if (!more) return
       const hiddenCount = matching.length - VISIBLE
-      more.hidden = hiddenCount <= 0
+      moreBox.classList.toggle('hide', hiddenCount <= 0)
       more.textContent = showAll ? 'Voir moins de dates' : `${moreLabel} (${hiddenCount})`
       more.setAttribute('aria-expanded', String(showAll))
     }
