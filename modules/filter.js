@@ -38,6 +38,8 @@ export function init() {
     const items = [...root.querySelectorAll('[data-filter-item]')]
     if (!tabs.length && !items.length) return // sans onglets (une seule sous-formation), la limite et Voir plus restent actifs
     const inputs = [...root.querySelectorAll('[data-filter-input]')]
+    // Champ texte masqué dans Webflow (pas de champ caché natif) : on en fait un vrai champ caché, hors de l'arbre d'accessibilité
+    inputs.forEach((input) => (input.type = 'hidden'))
     // Limite d'affichage : data-filter-limit="5" sur le groupe, bouton [data-filter-more] pour voir le reste
     const limit = parseInt(root.dataset.filterLimit, 10) || 0
     const more = root.querySelector('[data-filter-more]')

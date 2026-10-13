@@ -6,6 +6,8 @@
 // ajoute un champ caché « Emplacement » pour savoir d'où vient la demande, et synchronise les valeurs :
 // ce que le prospect saisit dans un formulaire se retrouve dans les autres, et l'étape en cours (formSteps) aussi.
 // Seul le formulaire envoyé part.
+// Dans les copies, les titres descendent d'un niveau (h2 du formulaire devient h3) : ils sont placés sous le titre
+// de leur section (CTA, modale) et ne doublent pas ceux du hero dans le plan de la page.
 // Il doit tourner avant que Webflow branche ses formulaires (DOMContentLoaded) : main.js, chargé en module,
 // s'exécute avant cet événement. Sans JS, les emplacements restent vides et le hero garde son formulaire.
 
@@ -44,6 +46,17 @@ const uniquifyIds = (root, suffix) => {
   })
 }
 
+// Titres de la copie un niveau plus bas, classes et attributs conservés (le style ne change pas)
+const demoteHeadings = (root) => {
+  root.querySelectorAll('h1, h2, h3, h4, h5').forEach((heading) => {
+    const level = Number(heading.tagName[1]) + 1
+    const lower = document.createElement(`h${level}`)
+    ;[...heading.attributes].forEach((attr) => lower.setAttribute(attr.name, attr.value))
+    lower.append(...heading.childNodes)
+    heading.replaceWith(lower)
+  })
+}
+
 const syncValue = (field, forms) => {
   if (!field.name) return
   forms.forEach((form) => {
@@ -68,6 +81,7 @@ export function init() {
     const copy = source.cloneNode(true)
     copy.removeAttribute('data-form-source')
     uniquifyIds(copy, location)
+    demoteHeadings(copy)
     slot.appendChild(copy)
     copy.querySelectorAll('form').forEach((form) => addLocationField(form, location))
   })
