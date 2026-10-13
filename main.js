@@ -10,6 +10,7 @@ import { init as initCycle } from './modules/cycle.js'
 import { init as initFormClone } from './modules/formClone.js'
 import { init as initModal } from './modules/modal.js'
 import { init as initCalendar } from './modules/calendar.js'
+import { init as initFilter } from './modules/filter.js'
 
 // Modules présents sur toutes les pages (navbar, transitions de page) : les appeler ici, avant le détecteur.
 
@@ -21,6 +22,8 @@ const moduleDetectors = {
   formValidation: { selector: 'form[data-validate]', initFn: initFormValidation },
   navScroll: { selector: '[data-nav-scroll]', initFn: initNavScroll },
   formSteps: { selector: '[data-form-steps]', initFn: initFormSteps },
+  // Après formSteps (choix de formation pré-coché) et formClone (copies du formulaire)
+  filter: { selector: '[data-filter]', initFn: initFilter },
   marquee: { selector: '.marquee', initFn: initMarquee },
   tabs: { selector: '[data-tabs]', initFn: initTabs },
   cycle: { selector: '[data-cycle]', initFn: initCycle },

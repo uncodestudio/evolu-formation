@@ -1,24 +1,28 @@
 // Calendrier des sessions (LP inter).
-// Accroches : [data-calendar] sur la section, [data-calendar-filter="all|init|mac"] sur les boutons de filtre,
-// [data-calendar-session] sur chaque ligne (composant Session, liste CMS à terme), [data-calendar-date] et
-// [data-calendar-formation] dans la ligne (le texte de la formation doit être celui d'un filtre), [data-calendar-book] sur son bouton Réserver,
-// [data-calendar-more] sur le bouton Voir plus de dates. Filtres et Voir plus peuvent être des liens role="button".
-// États en classes natives Webflow, sans CSS dans Global Styles : hide (Client-First) sur les lignes et Voir plus masqués,
-// is-active sur le filtre choisi, is-init ou is-mac sur la barre [data-calendar-bar] de la ligne.
+// Filtres : mêmes accroches que le module filter. [data-filter-tab] sur chaque onglet (data-filter-tab="all" pour Toutes),
+// [data-filter-item] sur chaque ligne, avec un texte caché [data-filter-value] relié au CMS (nom de la formation) :
+// un onglet n'affiche que les lignes dont ce texte est le sien (majuscules et espaces en trop ignorés). Aucun onglet
+// choisi, ou Toutes : tout s'affiche. Un second clic sur un onglet le libère.
+// Autres accroches : [data-calendar] sur la section, [data-calendar-date] dans la ligne, [data-calendar-book] sur ses
+// boutons Réserver et Liste d'attente, [data-calendar-more] sur le bouton Voir plus de dates, [data-calendar-bar] sur la barre.
+// Onglets et Voir plus peuvent être des liens role="button".
+// États en classes natives Webflow : hide (Client-First) sur les lignes et Voir plus masqués, is-active sur l'onglet choisi,
+// is-<clé> sur la barre de la ligne quand l'onglet correspondant porte data-calendar-filter="<clé>" (ex. is-mac).
 // Ligne complète : visibilité conditionnelle CMS (Complet) dans Webflow, le JS n'a rien à décider.
 // Réserver : coche la formation et la session de la ligne dans le formulaire (formClone recopie partout),
 // passe à l'étape des coordonnées, puis la modale s'ouvre par [data-modal-open] posé sur le même bouton.
 
+import { norm, tabText, itemValue, matches } from './filter.js'
+
 const VISIBLE = 8 // lignes affichées avant Voir plus de dates
 
-const norm = (text) => (text || '').replace(/\s+/g, ' ').trim().toLowerCase()
-
-// Coche le radio du groupe dont la valeur correspond au texte, et prévient formClone
+// Coche le radio du groupe dont la valeur ou le libellé correspond au texte, et prévient formClone
 const checkRadio = (name, text) => {
   const wanted = norm(text)
   if (!wanted) return false
   const radios = [...document.querySelectorAll(`input[type="radio"][name="${name}"]`)]
-  const radio = radios.find((r) => norm(r.value) === wanted) || radios.find((r) => norm(r.value).includes(wanted))
+  const label = (r) => norm(r.closest('label')?.querySelector('.w-form-label')?.textContent)
+  const radio = radios.find((r) => norm(r.value) === wanted || label(r) === wanted)
   if (!radio) return false
   radio.checked = true
   radio.dispatchEvent(new Event('change', { bubbles: true }))
@@ -27,32 +31,29 @@ const checkRadio = (name, text) => {
 
 export function init() {
   document.querySelectorAll('[data-calendar]').forEach((calendar) => {
-    const rows = [...calendar.querySelectorAll('[data-calendar-session]')]
-    const filters = [...calendar.querySelectorAll('[data-calendar-filter]')]
+    const rows = [...calendar.querySelectorAll('[data-filter-item]')]
+    const tabs = [...calendar.querySelectorAll('[data-filter-tab]')]
     const more = calendar.querySelector('[data-calendar-more]')
     const moreLabel = more ? more.textContent.trim() : ''
     // On masque le bloc qui entoure le bouton s'il ne contient que lui (pas de marge vide sous la liste)
     const moreBox = more && more.parentElement.children.length === 1 ? more.parentElement : more
-    let filter = 'all'
+    let active = tabs.find((tab) => tab.dataset.filterTab === 'all') || null
     let showAll = false
 
-    // Filtre par texte : une ligne appartient au filtre dont le texte est celui de sa formation ([data-calendar-formation]).
-    // La clé du filtre (init, mac) est recopiée sur la ligne (data-calendar-type) et en classe is-<clé> sur sa barre.
+    // Couleur de la barre : classe is-<clé> de l'onglet dont le texte est celui de la ligne
     rows.forEach((row) => {
-      const name = norm(row.querySelector('[data-calendar-formation]')?.textContent)
-      const match = filters.find((btn) => btn.dataset.calendarFilter !== 'all' && norm(btn.textContent) === name)
-      row.dataset.calendarType = match ? match.dataset.calendarFilter : ''
-      if (match) row.querySelector('[data-calendar-bar]')?.classList.add('is-' + match.dataset.calendarFilter)
+      const tab = tabs.find((t) => t.dataset.calendarFilter && tabText(t) === itemValue(row))
+      if (tab) row.querySelector('[data-calendar-bar]')?.classList.add('is-' + tab.dataset.calendarFilter)
     })
 
     const render = () => {
-      const matching = rows.filter((row) => filter === 'all' || row.dataset.calendarType === filter)
+      const wanted = active && active.dataset.filterTab !== 'all' ? tabText(active) : ''
+      const matching = rows.filter((row) => matches(row, wanted))
       rows.forEach((row) => row.classList.add('hide'))
       matching.forEach((row, i) => row.classList.toggle('hide', !showAll && i >= VISIBLE))
-      filters.forEach((btn) => {
-        const on = btn.dataset.calendarFilter === filter
-        btn.classList.toggle('is-active', on)
-        btn.setAttribute('aria-pressed', String(on))
+      tabs.forEach((tab) => {
+        tab.classList.toggle('is-active', tab === active)
+        tab.setAttribute('aria-pressed', String(tab === active))
       })
       if (!more) return
       const hiddenCount = matching.length - VISIBLE
@@ -61,10 +62,10 @@ export function init() {
       more.setAttribute('aria-expanded', String(showAll))
     }
 
-    filters.forEach((btn) =>
-      btn.addEventListener('click', (e) => {
+    tabs.forEach((tab) =>
+      tab.addEventListener('click', (e) => {
         e.preventDefault()
-        filter = btn.dataset.calendarFilter
+        active = active === tab && tab.dataset.filterTab !== 'all' ? null : tab
         showAll = false
         render()
       })
@@ -78,9 +79,9 @@ export function init() {
       })
     }
 
-    // Filtres et Voir plus sont des liens role="button" dans Webflow : Espace a le même effet qu'un clic
+    // Onglets et Voir plus sont des liens role="button" dans Webflow : Espace a le même effet qu'un clic
     calendar.addEventListener('keydown', (e) => {
-      if (e.key !== ' ' || !e.target.closest('[data-calendar-filter], [data-calendar-more]')) return
+      if (e.key !== ' ' || !e.target.closest('[data-filter-tab], [data-calendar-more]')) return
       e.preventDefault()
       e.target.click()
     })
@@ -89,9 +90,9 @@ export function init() {
     // Calendar démarre avant modal (main.js), donc le choix est fait avant l'ouverture de la modale.
     calendar.querySelectorAll('[data-calendar-book]').forEach((book) =>
       book.addEventListener('click', () => {
-        const row = book.closest('[data-calendar-session]')
+        const row = book.closest('[data-filter-item]')
         if (!row) return
-        checkRadio('Formation', row.querySelector('[data-calendar-formation]')?.textContent)
+        checkRadio('Formation', row.querySelector('[data-filter-value]')?.textContent)
         const sessionChecked = checkRadio('Session', row.querySelector('[data-calendar-date]')?.textContent)
         // Formation et session choisies : on va directement aux coordonnées (étape 2)
         if (sessionChecked) {
