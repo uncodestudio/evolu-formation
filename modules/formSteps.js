@@ -37,6 +37,9 @@ export function init() {
     // la même carte, et Webflow ne permet pas de lier la valeur d'un bouton radio au CMS. Chaque session prend
     // donc pour valeur le texte de sa date, et les ids répétés deviennent uniques.
     form.querySelectorAll('[data-form-session] input[type="radio"], [data-filter-item] input[type="radio"]').forEach((radio, i) => {
+      // Radio dupliqué d'un autre groupe dans Webflow : il garde l'ancien name (ex. Formation) et seul data-name
+      // porte le bon groupe (Session). On rétablit le name, sinon la session part sous le mauvais champ.
+      if (radio.dataset.name && radio.name !== radio.dataset.name) radio.name = radio.dataset.name
       const label = radio.closest('label')?.querySelector('.w-form-label')
       if (label && label.textContent.trim()) radio.value = label.textContent.trim()
       if (radio.id && document.querySelectorAll(`#${CSS.escape(radio.id)}`).length > 1) radio.id = `${radio.id}-${i + 1}`
