@@ -9,7 +9,7 @@
 // États en classes natives Webflow : hide (Client-First) sur les lignes et Voir plus masqués, is-active sur l'onglet choisi,
 // is-<clé> sur la barre de la ligne quand l'onglet correspondant porte data-calendar-filter="<clé>" (ex. is-mac).
 // Ligne complète : visibilité conditionnelle CMS (Complet) dans Webflow, le JS n'a rien à décider.
-// Réserver : coche la formation et la session de la ligne dans le formulaire (formClone recopie partout),
+// Réserver : choisit l'onglet de la formation (filter:select) et coche la session de la ligne dans le formulaire,
 // passe à l'étape des coordonnées, puis la modale s'ouvre par [data-modal-open] posé sur le même bouton.
 
 import { norm, tabText, itemValue, matches } from './filter.js'
@@ -92,7 +92,8 @@ export function init() {
       book.addEventListener('click', () => {
         const row = book.closest('[data-filter-item]')
         if (!row) return
-        checkRadio('Formation', row.querySelector('[data-filter-value]')?.textContent)
+        // Choisit l'onglet de la formation dans le formulaire (module filter), puis coche la session
+        document.dispatchEvent(new CustomEvent('filter:select', { detail: { value: row.querySelector('[data-filter-value]')?.textContent } }))
         const sessionChecked = checkRadio('Session', row.querySelector('[data-calendar-date]')?.textContent)
         // Formation et session choisies : on va directement aux coordonnées (étape 2)
         if (sessionChecked) {
