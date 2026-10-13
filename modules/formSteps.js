@@ -6,6 +6,7 @@
 // (bloc devis du bas de page vers le formulaire du hero). Avec formClone, le choix est recopié dans les copies.
 // Un champ caché [data-form-page] reçoit le titre et l'adresse de la page : le formulaire s'appelle « Form LP »
 // sur toutes les LP, c'est ce champ qui dit dans l'e-mail reçu de quelle page vient la demande.
+// Chaque radio prend pour valeur le texte de son libellé (choix liés à des champs de composant ou au CMS).
 // LP inter : sessions [data-form-session] ou cartes CMS [data-filter-item] (filtrées par le module filter)
 // et data-form-recap-fields sur le <form>.
 
@@ -33,10 +34,10 @@ export function init() {
       field.value = `${document.title} (${location.pathname})`
     })
 
-    // Sessions (LP inter, [data-form-session] ou cartes [data-filter-item] de la liste CMS) : la liste répète
-    // la même carte, et Webflow ne permet pas de lier la valeur d'un bouton radio au CMS. Chaque session prend
-    // donc pour valeur le texte de sa date, et les ids répétés deviennent uniques.
-    form.querySelectorAll('[data-form-session] input[type="radio"], [data-filter-item] input[type="radio"]').forEach((radio, i) => {
+    // Chaque bouton radio envoie le texte affiché de son libellé : Webflow ne permet de lier la valeur d'un radio
+    // ni à un champ de composant (choix de formation du hero Intra, modifiables par LP) ni au CMS (sessions inter,
+    // [data-form-session] ou cartes [data-filter-item] de la liste). Les ids répétés par la liste CMS deviennent uniques.
+    form.querySelectorAll('input[type="radio"]').forEach((radio, i) => {
       const label = radio.closest('label')?.querySelector('.w-form-label')
       if (label && label.textContent.trim()) radio.value = label.textContent.trim()
       if (radio.id && document.querySelectorAll(`#${CSS.escape(radio.id)}`).length > 1) radio.id = `${radio.id}-${i + 1}`
