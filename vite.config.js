@@ -1,14 +1,18 @@
 // vite.config.js
 import { defineConfig } from 'vite'
-// Inspecteur de mesures et maquettes HTML (dossier maquette/), en dev seulement : scripts/inspecteur/LISEZ-MOI.md
-import inspecteur from './scripts/inspecteur/vite-plugin.js'
+import { existsSync } from 'node:fs'
+
+// Inspecteur de mesures et maquettes HTML (dossier maquette/), en dev seulement : scripts/inspecteur/LISEZ-MOI.md.
+// Il reste sur le poste (jamais sur GitHub) : chargé seulement s'il est présent, le build marche sans lui.
+const inspecteurPath = './scripts/inspecteur/vite-plugin.js'
+const plugins = existsSync(inspecteurPath) ? [(await import(inspecteurPath)).default()] : []
 
 // Port propre au site (R-29) : à remplacer par le prochain port libre du registre (playbook, webflow/js.md),
 // et à reporter dans la ligne localhost du pied de page Webflow (snippets/footer.html).
 const PORT = 3004
 
 export default defineConfig({
-  plugins: [inspecteur()],
+  plugins,
   build: {
     outDir: 'dist',
     minify: 'terser',

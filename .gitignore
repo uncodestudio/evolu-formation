@@ -2,6 +2,15 @@ node_modules/
 .env
 .DS_Store
 *.log
-# Maquettes : jamais commitées, le dépôt est public (seul le mode d'emploi l'est)
-maquette/*
-!maquette/LISEZ-MOI.md
+
+# Dépôt public (jsDelivr) : seuls le code du site et ce qui sert à le compiler sont publiés.
+# Tout le reste reste sur le poste : notes, maquettes, outils de dev, extraits Webflow, fichiers du client.
+CLAUDE.md
+README.md
+demo.html
+cms/
+docs/
+maquette/
+scripts/
+snippets/
+webflow/
